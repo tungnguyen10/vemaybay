@@ -32,12 +32,15 @@
   <!-- Build Main CSS -->
   <link href="templates/css/base.css" rel="stylesheet" type="text/css" />
   <link href="templates/css/settings.css" rel="stylesheet" type="text/css" />
+  <link href="templates/css/date.css" rel="stylesheet" type="text/css" />
   <link href="templates/css/style.css" rel="stylesheet" type="text/css" />
   <link href="templates/css/main.css" rel="stylesheet" type="text/css" />
 
+ 
+
 </head>
 
-<body>
+<body class="product-tours-details" >
   <!-- Main content -->
   <header class="header">
     <div class="container">
@@ -603,24 +606,21 @@
                       <div class="line-item-property__field">
                         <div class="input-group">
                           <span class="input-group-addon"><i class="fa fa-calendar" aria-hidden="true"></i></span>
-                          <input required="" class="required tourmaster-datepicker hasDatepicker" id="datesss"
-                            name="properties[Ngày đi]" type="text" placeholder="Chọn Ngày đi"
-                            data-date-format="dd MM yyyy" readonly="readonly">
+                          <input required class="required tourmaster-datepicker" id="datesss" name="properties[Ngày đi]" type="text"  placeholder="Chọn Ngày đi" data-date-format="dd MM yyyy" readonly="readonly" />
                         </div>
                       </div>
                     </div>
                     <div class="col-md-6 col-sm-5 add-to-cart col-xs-6 col-100">
-                      <button type="submit" id="submit-table"
-                        class="pull-right btn btn-default buynow add-to-cart button nomargin">
+                      <button type="submit" id="submit-table" class="pull-right btn btn-default buynow add-to-cart button nomargin">
                         <i class="fa fa-paper-plane" aria-hidden="true"></i> Đặt tour
                       </button>
                     </div>
                   </div>
-                  <div class="alert alert-warning alert-dismissible margin-top-20 hidden" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                        aria-hidden="true">×</span></button>
+                  <div class="alert alert-warning alert-dismissible margin-top-20" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
                     Vui lòng liên hệ <strong><a href="tel:0982362509">0982 362 509</a></strong> để đặt Tour.
                   </div>
+                  
                 </form>
               </div>
             </div>
@@ -1809,6 +1809,7 @@
 
   <!-- Plugin JS -->
   <script src="templates/js/jquery-2.2.3.min.js" type="text/javascript"></script>
+  <script src="templates/js/datepicker.js" type="text/javascript"></script>
   <script src="templates/js/owl.carousel.min.js" type="text/javascript"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
     integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
@@ -1833,6 +1834,158 @@
       s.parentNode.insertBefore(wf, s);
     })();
   </script>
+
+<script>
+  if($('.pd_tour_variants .pd_variants_content ul').length == '0' ){
+    $('.pd_tour_variants').addClass('hidden');
+    $('.contact_btn_group').addClass('hidden');
+    $('.alert-warning').removeClass('hidden');
+  }else{
+    $('.alert-warning').addClass('hidden');
+    $.each($('.quantity'), function() {
+      var $qty = $(this).find('input.qty')
+      var quantity = parseInt($qty.val());
+      var $minus = $(this).find('.minus');
+      var $plus = $(this).find('.plus');
+      $minus.on('click', function() {
+        if (quantity > 0) {
+          if (quantity == 1) {
+          }
+          quantity -= 1;
+        }
+        else {
+          quantity = 0;
+        }
+        $qty.val(quantity);
+        updatePrice()
+      })
+      $plus.on('click', function() {
+        if (quantity < 100) {
+          quantity += 1;
+        }
+        else {
+          quantity = 100;
+        }  
+        $qty.val(quantity);
+        var max = parseInt(jQuery($qty).attr('max'), 10) || 10000;
+        var value = parseInt(jQuery($qty).val(), 10) || 0;
+        if (value > max) { 
+          alert('Chúng tôi chỉ còn ' + max + ' mặt hàng này trong kho');
+          jQuery($qty).val(max); 
+        };
+        updatePrice();
+      });
+    })
+
+
+    }
+</script>
+
+<script>
+	
+	var length = 3;
+
+	$(document).ready(function () {
+		$("#quantity-0").focus();
+		$("#submit-table").click(function(e) {   
+			e.preventDefault();
+			var toAdd = new Array();
+			var qty ;
+			for(i=0; i < length; i++){
+				var q = $("#quantity-"+i).val();
+				if (q > 0){
+					toAdd.push({
+						variant_id: $("#variant-"+i).val(),  
+						variant_date: $("#datesss").val(),
+						variant_dates: $("#datesss").val(),
+						quantity_id: $("#quantity-"+i).val() || 0
+					});
+				};
+			}
+			function moveAlong(){
+				if (toAdd.length) {
+					var request = toAdd.shift();
+					var tempId= request.variant_id;
+					var tempQty = request.quantity_id;
+					var tempDate = request.variant_date;
+					data = {
+						"quantity": tempQty,
+						"variantId": tempId,
+						"properties[Ngày đi]": tempDate
+					}
+					console.log(data.variantId);
+					debugger;
+					var params = {
+						type: 'POST',
+						url: '/cart/add.js',                  
+						data: data,
+						dataType: 'json',
+						success: function(line_item) { 
+							moveAlong();
+							jQuery.getJSON('/cart.js', function(cart) {
+								var item_count =  cart.item_count;
+							});
+						},                  
+						error: function() {
+							moveAlong();
+
+						}
+					};
+					$.ajax(params);
+				}
+				else {				
+					document.location.href = '/checkout';
+				}  
+			};
+			moveAlong();
+		});
+		var dates = $("#date-khoi-hanh").text();
+		var n = dates.search("Chủ nhật");
+		var cn = dates.substring(n, 8);
+		var numb = dates.match(/\d/g);
+		if(n > -1 ){
+			if(numb && numb.length){
+				numb.push('1');
+			}else{
+				numb = ['1'];
+			}
+		}
+		var dateToday = new Date();
+		function DisableMonday(date) {
+			var day = date.getDay();
+			var i;
+			if(numb && numb.length){
+				for (i = 0; i < numb.length; i++){
+					var m = numb[i] - 1;
+					var m1 = numb[i+1] - 1;
+					var m2 = numb[i+2] - 1;
+					var m3 = numb[i+3] - 1;
+					var m4 = numb[i+4] - 1;
+					var m5 = numb[i+5] - 1;
+					var m6 = numb[i+6] - 1;
+					if (day == m || day == m1 || day == m2 || day == m3 || day == m4 || day == m5 || day == m6) {
+						return [true] ; 
+					} else { 
+						return [false] ;
+					}
+				}
+			}else{
+				return [true];
+			}
+		}
+		$(".tourmaster-datepicker").datepicker({
+			defaultDate: "",
+			changeMonth: true,
+			changeYear: true,
+			numberOfMonths: 1,
+			minDate: dateToday,
+			beforeShowDay: DisableMonday
+		});
+	});
+</script>
+
+
+
 </body>
 
 </html>

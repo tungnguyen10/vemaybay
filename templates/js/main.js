@@ -244,6 +244,17 @@ window.awe_resizeimage = awe_resizeimage;
 /********************************************************
 # SIDEBAR CATEOGRY
 ********************************************************/
+
+var placeholderText = ['Nhập điểm đến bạn muốn tới','Nha Trang', 'Đà Lạt', 'Đà Nẵng', 'Hà Nội', 'Hội An', 'Hồ Chí Minh'];
+$('.search-auto').placeholderTypewriter({text: placeholderText});
+$(document).on('click','.overlay, .close-popup, .btn-continue, .fancybox-close', function() {   
+	hidePopup('.awe-popup'); 	
+	setTimeout(function(){$('.loading').removeClass('loaded-content');},500);
+	return false;
+})
+/********************************************************
+# SIDEBAR CATEOGRY
+********************************************************/
 function awe_category() {
     $('.nav-category .fa-angle-down').click(function (e) {
         $(this).parent().toggleClass('active');
